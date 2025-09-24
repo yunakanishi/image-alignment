@@ -1,0 +1,50 @@
+name: image-alignment
+display_name: Image Alignment
+# use 'hidden' to remove plugin from napari hub search results
+visibility: public
+# see https://napari.org/stable/plugins/technical_references/manifest.html#fields for valid categories
+# categories: []
+contributions:
+  commands:
+    - id: image-alignment.get_reader
+      python_name: image_alignment._reader:napari_get_reader
+      title: Open data with Image Alignment
+    - id: image-alignment.write_multiple
+      python_name: image_alignment._writer:write_multiple
+      title: Save multi-layer data with Image Alignment
+    - id: image-alignment.write_single_image
+      python_name: image_alignment._writer:write_single_image
+      title: Save image data with Image Alignment
+    - id: image-alignment.make_container_widget
+      python_name: image_alignment:ImageThreshold
+      title: Make threshold Container widget
+    - id: image-alignment.make_magic_widget
+      python_name: image_alignment:threshold_magic_widget
+      title: Make threshold magic widget
+    - id: image-alignment.make_function_widget
+      python_name: image_alignment:threshold_autogenerate_widget
+      title: Make threshold function widget
+    - id: image-alignment.make_qwidget
+      python_name: image_alignment:ExampleQWidget
+      title: Make example QWidget
+  readers:
+    - command: image-alignment.get_reader
+      accepts_directories: false
+      filename_patterns: ['*.npy']
+  writers:
+    - command: image-alignment.write_multiple
+      layer_types: ['image*','labels*']
+      filename_extensions: []
+    - command: image-alignment.write_single_image
+      layer_types: ['image']
+      filename_extensions: ['.npy']
+  widgets:
+    - command: image-alignment.make_container_widget
+      display_name: Container Threshold
+    - command: image-alignment.make_magic_widget
+      display_name: Magic Threshold
+    - command: image-alignment.make_function_widget
+      autogenerate: true
+      display_name: Autogenerate Threshold
+    - command: image-alignment.make_qwidget
+      display_name: Example QWidget
