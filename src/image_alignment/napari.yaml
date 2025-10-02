@@ -27,6 +27,9 @@ contributions:
     - id: image-alignment.make_qwidget
       python_name: image_alignment:ExampleQWidget
       title: Make example QWidget
+    - id: image-alignment.make_alignment_widget
+      python_name: image_alignment:InteractiveImageAlignment
+      title: Interactive Image Alignment
   readers:
     - command: image-alignment.get_reader
       accepts_directories: false
@@ -48,3 +51,5 @@ contributions:
       display_name: Autogenerate Threshold
     - command: image-alignment.make_qwidget
       display_name: Example QWidget
+    - command: image-alignment.make_alignment_widget
+      display_name: Interactive Image Alignment

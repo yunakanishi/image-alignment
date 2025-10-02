@@ -9,7 +9,14 @@
 [![npe2](https://img.shields.io/badge/plugin-npe2-blue?link=https://napari.org/stable/plugins/index.html)](https://napari.org/stable/plugins/index.html)
 [![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-grayscale-inverted-border-purple.json)](https://github.com/copier-org/copier)
 
-alignment of imgaes with napariGUI
+Interactive image alignment with automatic padding for napari
+
+## Features
+
+- **Interactive Image Alignment**: Visually position a small image over a large base image using napari's interactive tools
+- **Automatic Padding**: Automatically pad the small image with zeros to match the base image's dimensions based on the chosen position
+- **Support for 2D and 3D images**: Works with both 2D and 3D image data
+- **Real-time preview**: See the positioning in real-time with a semi-transparent overlay
 
 ----------------------------------
 
@@ -42,6 +49,60 @@ To install latest development version :
 
 ```
 pip install git+https://github.com/yunakanishi/image-alignment.git
+```
+
+## Usage
+
+### Interactive Image Alignment
+
+1. **Load your images**: Open napari and load both your large base image and small image that you want to align.
+
+2. **Open the alignment widget**: Go to `Plugins > image-alignment > Interactive Image Alignment`
+
+3. **Select images**: 
+   - Choose your large base image from the "Base Image (Large)" dropdown
+   - Choose your small image from the "Small Image" dropdown
+
+4. **Start alignment**: Click "Start Interactive Alignment" to begin the positioning process
+
+5. **Position the image**: 
+   - A semi-transparent red overlay of your small image will appear
+   - Use napari's pan/translate tools to drag this overlay to your desired position
+   - The overlay represents where your small image will be placed on the base image
+
+6. **Apply padding**: Once you're satisfied with the position, click "Apply Padding"
+   - A new layer will be created with your small image padded to match the base image size
+   - The small image will be positioned exactly where you placed the overlay
+
+### Example Use Case
+
+```python
+import napari
+import numpy as np
+from image_alignment import InteractiveImageAlignment
+
+# Create sample images
+large_image = np.random.rand(4000, 3000)  # Large base image
+small_image = np.random.rand(1000, 2000)  # Small image to align
+
+# Start napari
+viewer = napari.Viewer()
+viewer.add_image(large_image, name="Base")
+viewer.add_image(small_image, name="Small")
+
+# Add alignment widget
+alignment_widget = InteractiveImageAlignment(viewer)
+viewer.window.add_dock_widget(alignment_widget, name="Alignment")
+
+napari.run()
+```
+
+### Running the Demo
+
+A demo script is included to test the functionality:
+
+```bash
+python demo_alignment.py
 ```
 
 

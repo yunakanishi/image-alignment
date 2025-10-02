@@ -33,6 +33,7 @@ dependencies = [
     "magicgui",
     "qtpy",
     "scikit-image",
+    "napari",  # Required for type annotations and runtime usage
 ]
 
 [project.optional-dependencies]
