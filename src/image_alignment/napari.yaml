@@ -15,18 +15,6 @@ contributions:
     - id: image-alignment.write_single_image
       python_name: image_alignment._writer:write_single_image
       title: Save image data with Image Alignment
-    - id: image-alignment.make_container_widget
-      python_name: image_alignment:ImageThreshold
-      title: Make threshold Container widget
-    - id: image-alignment.make_magic_widget
-      python_name: image_alignment:threshold_magic_widget
-      title: Make threshold magic widget
-    - id: image-alignment.make_function_widget
-      python_name: image_alignment:threshold_autogenerate_widget
-      title: Make threshold function widget
-    - id: image-alignment.make_qwidget
-      python_name: image_alignment:ExampleQWidget
-      title: Make example QWidget
     - id: image-alignment.make_alignment_widget
       python_name: image_alignment:InteractiveImageAlignment
       title: Interactive Image Alignment
@@ -42,14 +30,5 @@ contributions:
       layer_types: ['image']
       filename_extensions: ['.npy']
   widgets:
-    - command: image-alignment.make_container_widget
-      display_name: Container Threshold
-    - command: image-alignment.make_magic_widget
-      display_name: Magic Threshold
-    - command: image-alignment.make_function_widget
-      autogenerate: true
-      display_name: Autogenerate Threshold
-    - command: image-alignment.make_qwidget
-      display_name: Example QWidget
     - command: image-alignment.make_alignment_widget
       display_name: Interactive Image Alignment

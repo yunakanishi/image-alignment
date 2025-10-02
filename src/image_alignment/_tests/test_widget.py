@@ -1,66 +1,53 @@
 import numpy as np
 
-from image_alignment._widget import (
-    ExampleQWidget,
-    ImageThreshold,
-    threshold_autogenerate_widget,
-    threshold_magic_widget,
-)
+from image_alignment._widget import InteractiveImageAlignment
 
 
-def test_threshold_autogenerate_widget():
-    # because our "widget" is a pure function, we can call it and
-    # test it independently of napari
-    im_data = np.random.random((100, 100))
-    thresholded = threshold_autogenerate_widget(im_data, 0.5)
-    assert thresholded.shape == im_data.shape
-    # etc.
-
-
-# make_napari_viewer is a pytest fixture that returns a napari viewer object
-# you don't need to import it, as long as napari is installed
-# in your testing environment
-def test_threshold_magic_widget(make_napari_viewer):
+def test_interactive_image_alignment_widget(make_napari_viewer):
+    """Test InteractiveImageAlignment widget initialization and basic functionality."""
     viewer = make_napari_viewer()
-    layer = viewer.add_image(np.random.random((100, 100)))
+    
+    # Create test images
+    base_image = np.random.random((200, 200))
+    small_image = np.random.random((100, 100))
+    
+    # Add layers to viewer
+    base_layer = viewer.add_image(base_image, name="base_image")
+    small_layer = viewer.add_image(small_image, name="small_image")
+    
+    # Create widget
+    my_widget = InteractiveImageAlignment(viewer)
+    
+    # Test widget initialization
+    assert my_widget._viewer == viewer
+    assert my_widget._overlay_layer is None
+    assert not my_widget._is_aligning
+    
+    # Test layer selection
+    my_widget._base_image_combo.value = base_layer
+    my_widget._small_image_combo.value = small_layer
+    
+    # Test that start button is enabled after selecting layers
+    assert my_widget._start_alignment_btn.enabled
+    assert not my_widget._apply_padding_btn.enabled
 
-    # our widget will be a MagicFactory or FunctionGui instance
-    my_widget = threshold_magic_widget()
 
-    # if we "call" this object, it'll execute our function
-    thresholded = my_widget(viewer.layers[0], 0.5)
-    assert thresholded.shape == layer.data.shape
-    # etc.
-
-
-def test_image_threshold_widget(make_napari_viewer):
+def test_image_padding_function(make_napari_viewer):
+    """Test the _pad_image_to_position method."""
     viewer = make_napari_viewer()
-    layer = viewer.add_image(np.random.random((100, 100)))
-    my_widget = ImageThreshold(viewer)
-
-    # because we saved our widgets as attributes of the container
-    # we can set their values without having to "interact" with the viewer
-    my_widget._image_layer_combo.value = layer
-    my_widget._threshold_slider.value = 0.5
-
-    # this allows us to run our functions directly and ensure
-    # correct results
-    my_widget._threshold_im()
-    assert len(viewer.layers) == 2
-
-
-# capsys is a pytest fixture that captures stdout and stderr output streams
-def test_example_q_widget(make_napari_viewer, capsys):
-    # make viewer and add an image layer using our fixture
-    viewer = make_napari_viewer()
-    viewer.add_image(np.random.random((100, 100)))
-
-    # create our widget, passing in the viewer
-    my_widget = ExampleQWidget(viewer)
-
-    # call our widget method
-    my_widget._on_click()
-
-    # read captured output and check that it's as we expected
-    captured = capsys.readouterr()
-    assert captured.out == "napari has 1 layers\n"
+    widget = InteractiveImageAlignment(viewer)
+    
+    # Create test data
+    small_image = np.ones((50, 50))
+    target_shape = (100, 100)
+    translate = (25, 25)  # Center position
+    
+    # Test padding
+    padded = widget._pad_image_to_position(small_image, target_shape, translate)
+    
+    # Check result shape
+    assert padded.shape == target_shape
+    
+    # Check that the small image is placed correctly (non-zero values should be in center)
+    assert np.sum(padded[25:75, 25:75]) > 0  # Center should have values
+    assert np.sum(padded[0:25, 0:25]) == 0   # Top-left corner should be empty
