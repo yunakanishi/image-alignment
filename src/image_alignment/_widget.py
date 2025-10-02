@@ -124,51 +124,50 @@ class InteractiveImageAlignment(Container):
         base_shape = self._base_image_layer.data.shape
         small_shape = self._small_image_layer.data.shape
         
-        # Get the current position of the overlay
-        overlay_translate = self._overlay_layer.translate
+        # Get the current position of the overlay (use extent.world for accuracy)
+        overlay_extent = self._overlay_layer.extent
+        base_extent = self._base_image_layer.extent
+
+        # Get the top-left corner of each layer in world coordinates
+        overlay_world_pos = overlay_extent.world[0]
+        base_world_pos = base_extent.world[0]
+
+        # Calculate relative position in world coordinates and convert to pixels
+        relative_world_pos = overlay_world_pos - base_world_pos
+        relative_translate = tuple(int(round(relative_world_pos[i])) for i in range(len(relative_world_pos)))
+
+        # Also get base_translate for later use
+        base_translate = self._base_image_layer.translate
         
-        # If translate is (0, 0), the overlay might not have been moved
-        # In this case, we should still create a padded version
-        if all(t == 0 for t in overlay_translate):
-            print("Warning: Overlay position is (0,0) - using center position")
-            # Place small image in center of large image
+        # If overlay wasn't moved, fall back to center placement
+        if all(abs(t) < 0.5 for t in relative_translate):
             center_y = (base_shape[0] - small_shape[0]) // 2
             center_x = (base_shape[1] - small_shape[1]) // 2
-            overlay_translate = (center_y, center_x)
-        
-        # Debug: Print information
-        print(f"Base image shape: {base_shape}")
-        print(f"Small image shape: {small_shape}")
-        print(f"Overlay translate: {overlay_translate}")
+            relative_translate = (center_y, center_x)
         
         # Calculate padding based on overlay position
         padded_image = self._pad_image_to_position(
             self._small_image_layer.data,
             base_shape,
-            overlay_translate
+            relative_translate,
         )
-        
-        # Debug: Check if padding worked
-        print(f"Padded image shape: {padded_image.shape}")
-        print(f"Padded image unique values: {len(np.unique(padded_image))}")
-        print(f"Padded image min/max: {padded_image.min()}/{padded_image.max()}")
-        
-        # Add the padded image as a new layer
+
+        # Add the padded image as a new layer (positioned with base layer translate)
         padded_name = f"{self._small_image_layer.name}_aligned"
-        self._viewer.add_image(
+        aligned_layer = self._viewer.add_image(
             padded_image,
             name=padded_name,
-            opacity=0.8
+            opacity=0.8,
+            translate=base_translate,
         )
-        
-        # Clean up overlay
+
+        # Clean up overlay and reset UI
         try:
             self._viewer.layers.remove(self._overlay_layer)
         except ValueError:
             pass
         self._overlay_layer = None
-        
-        # Reset UI
+
         self._is_aligning = False
         self._start_alignment_btn.enabled = True
         self._apply_padding_btn.enabled = False
@@ -177,31 +176,35 @@ class InteractiveImageAlignment(Container):
     def _pad_image_to_position(self, small_image: np.ndarray, target_shape: Tuple[int, ...], 
                               translate: Tuple[float, ...]) -> np.ndarray:
         """Pad the small image to match target shape based on translation."""
-        # Convert translate to integer pixel coordinates
-        # napari translate is in (z, y, x) order for 3D, (y, x) for 2D
+        # IMPORTANT: napari translate is in world coordinates, not pixel coordinates
+        # We need to convert world coordinates to pixel coordinates
         print(f"Raw translate: {translate}, target_shape dimensions: {len(target_shape)}")
         
+        # For now, assume scale is (1, 1) - in the future we should get this from the layer
+        # napari coordinates are in (row, col) order, which is (y, x)
         if len(target_shape) == 2:
-            # 2D case: translate should be (y, x)
+            # 2D case: translate should be (y, x) in world coordinates
             if len(translate) >= 2:
-                offset_y, offset_x = int(translate[0]), int(translate[1])
+                # Convert world coordinates to pixel coordinates
+                # For now, assume 1:1 mapping (scale = 1)
+                offset_y, offset_x = int(round(translate[0])), int(round(translate[1]))
             else:
                 offset_y, offset_x = 0, 0
         else:
-            # 3D case: translate should be (z, y, x)
+            # 3D case: translate should be (z, y, x) in world coordinates
             if len(translate) >= 3:
-                offset_z, offset_y, offset_x = int(translate[0]), int(translate[1]), int(translate[2])
+                offset_z, offset_y, offset_x = int(round(translate[0])), int(round(translate[1])), int(round(translate[2]))
             elif len(translate) >= 2:
                 offset_z = 0
-                offset_y, offset_x = int(translate[0]), int(translate[1])
+                offset_y, offset_x = int(round(translate[0])), int(round(translate[1]))
             else:
                 offset_z, offset_y, offset_x = 0, 0, 0
         
         # Debug: Print offset information
         if len(target_shape) == 2:
-            print(f"Calculated offsets: y={offset_y}, x={offset_x}")
+            print(f"Calculated pixel offsets: y={offset_y}, x={offset_x}")
         else:
-            print(f"Calculated offsets: z={offset_z}, y={offset_y}, x={offset_x}")
+            print(f"Calculated pixel offsets: z={offset_z}, y={offset_y}, x={offset_x}")
         
         # Create padded image filled with zeros
         padded = np.zeros(target_shape, dtype=small_image.dtype)
